@@ -10,7 +10,6 @@
     let allArticles = [];
     let categories = [];
     let userInterests = [];
-    let savedArticles = {};
     let activeFilter = "all";
 
     // DOM elements
@@ -30,7 +29,7 @@
     const lastUpdated = document.getElementById("lastUpdated");
     const refreshBtn = document.getElementById("refreshBtn");
 
-    // --- LocalStorage ---
+    // --- LocalStorage (interests + onboarding only) ---
     function loadInterests() {
         try {
             const stored = localStorage.getItem("mineNyheder_interests");
@@ -40,7 +39,7 @@
         }
     }
 
-    function saveInterests(interests) {
+    function saveInterestsToStorage(interests) {
         localStorage.setItem("mineNyheder_interests", JSON.stringify(interests));
     }
 
@@ -52,32 +51,23 @@
         localStorage.setItem("mineNyheder_onboarded", "true");
     }
 
-    // --- Saved Articles ---
-    function loadSavedArticles() {
-        try {
-            var stored = localStorage.getItem("mineNyheder_saved");
-            return stored ? JSON.parse(stored) : {};
-        } catch {
-            return {};
-        }
-    }
-
-    function persistSavedArticles() {
-        localStorage.setItem("mineNyheder_saved", JSON.stringify(savedArticles));
-    }
-
-    function toggleSaved(article) {
-        if (savedArticles[article.id]) {
-            delete savedArticles[article.id];
-        } else {
-            savedArticles[article.id] = article;
-        }
-        persistSavedArticles();
-        renderArticles();
-    }
-
+    // --- Saved Articles (via API / database) ---
     function isSaved(articleId) {
-        return !!savedArticles[articleId];
+        var article = allArticles.find(function (a) { return a.id === articleId; });
+        return article ? article.saved : false;
+    }
+
+    async function toggleSaved(article) {
+        var newSaved = !article.saved;
+        var endpoint = "/api/articles/" + article.id + (newSaved ? "/save" : "/unsave");
+        try {
+            await fetch(endpoint, { method: "POST" });
+            article.saved = newSaved;
+            renderCategoryFilters();
+            renderArticles();
+        } catch (err) {
+            console.error("Failed to toggle save:", err);
+        }
     }
 
     // --- API ---
@@ -145,7 +135,7 @@
         categoryFilters.appendChild(allChip);
 
         // "Gemte" filter chip
-        var savedCount = Object.keys(savedArticles).length;
+        var savedCount = allArticles.filter(function (a) { return a.saved; }).length;
         if (savedCount > 0) {
             var savedChip = document.createElement("button");
             savedChip.className = "category-chip" + (activeFilter === "saved" ? " active" : "");
@@ -179,14 +169,13 @@
 
     // --- Rendering: Articles ---
     function getFilteredArticles() {
-        // Show saved articles (including permanently saved ones not in feed)
         if (activeFilter === "saved") {
-            return Object.values(savedArticles).sort(function (a, b) {
+            return allArticles.filter(function (a) { return a.saved; }).sort(function (a, b) {
                 return (b.timestamp || 0) - (a.timestamp || 0);
             });
         }
 
-        let articles = allArticles;
+        let articles = allArticles.slice();
 
         // Personalize: prioritize articles matching user interests
         if (userInterests.length > 0) {
@@ -252,7 +241,9 @@
             ? allArticles.filter(function (a) { return userInterests.includes(a.category); }).length
             : allArticles.length;
 
-        if (activeFilter !== "all") {
+        if (activeFilter === "saved") {
+            articleCount.textContent = filtered.length + " gemte artikler";
+        } else if (activeFilter !== "all") {
             articleCount.textContent = filtered.length + " artikler i " + getCategoryName(activeFilter);
         } else if (userInterests.length > 0) {
             articleCount.textContent = totalInteresting + " relevante af " + allArticles.length + " artikler";
@@ -263,7 +254,7 @@
         filtered.forEach(function (article) {
             var card = document.createElement("article");
             card.className = "article-card";
-            var saved = isSaved(article.id);
+            var saved = article.saved;
 
             var imageHtml = "";
             if (article.imageUrl) {
@@ -344,7 +335,7 @@
         onboardingDone.addEventListener("click", function handler() {
             onboardingDone.removeEventListener("click", handler);
             userInterests = tempInterests;
-            saveInterests(userInterests);
+            saveInterestsToStorage(userInterests);
             markOnboarded();
             onboardingModal.classList.add("hidden");
             renderCategoryFilters();
@@ -363,7 +354,7 @@
 
         function onSave() {
             userInterests = tempInterests;
-            saveInterests(userInterests);
+            saveInterestsToStorage(userInterests);
             settingsModal.classList.add("hidden");
             activeFilter = "all";
             renderCategoryFilters();
@@ -393,9 +384,8 @@
             ];
         }
 
-        // Load user interests and saved articles
+        // Load user interests
         userInterests = loadInterests();
-        savedArticles = loadSavedArticles();
 
         // Load articles
         await loadFeed();
