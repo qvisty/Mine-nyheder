@@ -13,7 +13,12 @@ import re
 import threading
 import time
 
-app = Flask(__name__, static_folder="static")
+import os
+
+# Resolve paths relative to app.py location (needed for PythonAnywhere WSGI)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, "static"))
 
 # Danish news RSS feeds with category mappings
 RSS_SOURCES = [
@@ -380,7 +385,13 @@ def serve_static(filename):
 
 @app.route("/api/articles")
 def get_articles():
+    # Lazy-load feeds on first request (needed for PythonAnywhere where
+    # background threads are not available in WSGI mode)
     with cache_lock:
+        if not articles_cache:
+            cache_lock.release()
+            fetch_all_feeds()
+            cache_lock.acquire()
         return jsonify({
             "articles": articles_cache,
             "lastUpdated": last_fetch_time.isoformat() if last_fetch_time else None,

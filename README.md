@@ -53,6 +53,58 @@ Mine-nyheder/
 | `/api/categories` | GET | Henter tilgaengelige kategorier |
 | `/api/refresh` | POST | Tvinger opdatering af nyhedsfeeds |
 
+## Deploy paa PythonAnywhere
+
+### 1. Opret konto
+
+Gaa til [pythonanywhere.com](https://www.pythonanywhere.com) og opret en gratis konto.
+
+### 2. Upload projektet
+
+Aaben en **Bash console** paa PythonAnywhere og koer:
+
+```bash
+git clone https://github.com/qvisty/Mine-nyheder.git mine-nyheder
+cd mine-nyheder
+pip install --user -r requirements.txt
+```
+
+### 3. Opsaet web app
+
+1. Gaa til **Web** tab
+2. Klik **Add a new web app**
+3. Vaelg **Manual configuration** og **Python 3.10** (eller nyere)
+4. Ret **Source code** til: `/home/<dit-brugernavn>/mine-nyheder`
+5. Ret **WSGI configuration file** - klik paa linket og erstat indholdet med:
+
+```python
+import sys
+import os
+
+project_path = '/home/<dit-brugernavn>/mine-nyheder'
+if project_path not in sys.path:
+    sys.path.insert(0, project_path)
+os.chdir(project_path)
+
+from app import app as application
+```
+
+6. Under **Static files**, tilfoej:
+   - URL: `/static/` -> Directory: `/home/<dit-brugernavn>/mine-nyheder/static`
+
+7. Klik **Reload** paa web-appen
+
+### 4. Opsaet automatisk opdatering (valgfrit)
+
+1. Gaa til **Tasks** tab
+2. Tilfoej en scheduled task:
+   ```
+   python3 /home/<dit-brugernavn>/mine-nyheder/update_feeds.py
+   ```
+3. Ret `APP_URL` i `update_feeds.py` til din PythonAnywhere-URL
+
+Din side er nu live paa `https://<dit-brugernavn>.pythonanywhere.com`!
+
 ## Teknologi
 
 - **Backend**: Python / Flask
