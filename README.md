@@ -70,6 +70,25 @@ Feeds opdateres automatisk i baggrunden hvert 15. minut.
 
 > **Bemærk**: Render's gratis tier sover efter 15 min uden trafik. Foerste besog efter sleep tager ~30 sek.
 
+### Hold appen vaagen + daglig opdatering
+
+Render's gratis tier sover naar der ikke er trafik. For at sikre daglig (eller hyppigere) opdatering kan du bruge en gratis ekstern cron-tjeneste:
+
+**Med [cron-job.org](https://cron-job.org) (gratis):**
+
+1. Opret en gratis konto paa [cron-job.org](https://cron-job.org)
+2. Opret et nyt cron job:
+   - **URL**: `https://mine-nyheder.onrender.com/api/refresh`
+   - **Tidsplan**: Vaelg fx "Hver time" eller "Hver dag kl. 07:00"
+   - **Metode**: GET
+3. Gem - ferdig!
+
+Dette holder appen vaagen og sikrer friske nyheder.
+
+**Andre gratis cron-tjenester der ogsaa virker:**
+- [UptimeRobot](https://uptimerobot.com) - ping hvert 5. minut (holder appen permanent vaagen)
+- [Easycron](https://www.easycron.com) - gratis cron med fleksible tidsplaner
+
 ## Deploy paa PythonAnywhere
 
 ### 1. Opret konto

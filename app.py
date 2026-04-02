@@ -413,13 +413,23 @@ def get_categories():
     })
 
 
-@app.route("/api/refresh", methods=["POST"])
+@app.route("/api/refresh", methods=["GET", "POST"])
 def refresh_feeds():
     fetch_all_feeds()
     with cache_lock:
         return jsonify({
             "success": True,
             "articleCount": len(articles_cache),
+        })
+
+
+@app.route("/api/health")
+def health():
+    with cache_lock:
+        return jsonify({
+            "status": "ok",
+            "articles": len(articles_cache),
+            "lastUpdated": last_fetch_time.isoformat() if last_fetch_time else None,
         })
 
 
