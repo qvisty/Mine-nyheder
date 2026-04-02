@@ -350,6 +350,10 @@ def fetch_all_feeds():
         except Exception as e:
             print(f"Error fetching {source['name']}: {e}")
 
+    # Remove articles older than 90 days
+    cutoff = datetime.now().timestamp() - (90 * 24 * 3600)
+    all_articles = [a for a in all_articles if a["timestamp"] >= cutoff or a["timestamp"] == 0]
+
     # Sort by timestamp descending
     all_articles.sort(key=lambda a: a["timestamp"], reverse=True)
 

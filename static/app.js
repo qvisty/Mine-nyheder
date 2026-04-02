@@ -10,6 +10,7 @@
     let allArticles = [];
     let categories = [];
     let userInterests = [];
+    let savedArticles = {};
     let activeFilter = "all";
 
     // DOM elements
@@ -49,6 +50,34 @@
 
     function markOnboarded() {
         localStorage.setItem("mineNyheder_onboarded", "true");
+    }
+
+    // --- Saved Articles ---
+    function loadSavedArticles() {
+        try {
+            var stored = localStorage.getItem("mineNyheder_saved");
+            return stored ? JSON.parse(stored) : {};
+        } catch {
+            return {};
+        }
+    }
+
+    function persistSavedArticles() {
+        localStorage.setItem("mineNyheder_saved", JSON.stringify(savedArticles));
+    }
+
+    function toggleSaved(article) {
+        if (savedArticles[article.id]) {
+            delete savedArticles[article.id];
+        } else {
+            savedArticles[article.id] = article;
+        }
+        persistSavedArticles();
+        renderArticles();
+    }
+
+    function isSaved(articleId) {
+        return !!savedArticles[articleId];
     }
 
     // --- API ---
@@ -115,6 +144,20 @@
         });
         categoryFilters.appendChild(allChip);
 
+        // "Gemte" filter chip
+        var savedCount = Object.keys(savedArticles).length;
+        if (savedCount > 0) {
+            var savedChip = document.createElement("button");
+            savedChip.className = "category-chip" + (activeFilter === "saved" ? " active" : "");
+            savedChip.textContent = "Gemte (" + savedCount + ")";
+            savedChip.addEventListener("click", function () {
+                activeFilter = "saved";
+                renderCategoryFilters();
+                renderArticles();
+            });
+            categoryFilters.appendChild(savedChip);
+        }
+
         // Only show categories the user is interested in (or all if none selected)
         const relevantCategories = userInterests.length > 0
             ? categories.filter(function (c) { return userInterests.includes(c.id); })
@@ -136,6 +179,13 @@
 
     // --- Rendering: Articles ---
     function getFilteredArticles() {
+        // Show saved articles (including permanently saved ones not in feed)
+        if (activeFilter === "saved") {
+            return Object.values(savedArticles).sort(function (a, b) {
+                return (b.timestamp || 0) - (a.timestamp || 0);
+            });
+        }
+
         let articles = allArticles;
 
         // Personalize: prioritize articles matching user interests
@@ -213,6 +263,7 @@
         filtered.forEach(function (article) {
             var card = document.createElement("article");
             card.className = "article-card";
+            var saved = isSaved(article.id);
 
             var imageHtml = "";
             if (article.imageUrl) {
@@ -230,9 +281,20 @@
                     "</div>" +
                     '<h2 class="article-title">' + escapeHtml(article.title) + "</h2>" +
                     '<p class="article-description">' + escapeHtml(article.description) + "</p>" +
-                    '<a class="article-link" href="' + escapeHtml(article.link) +
-                        '" target="_blank" rel="noopener noreferrer">Laes mere</a>' +
+                    '<div class="article-actions">' +
+                        '<a class="article-link" href="' + escapeHtml(article.link) +
+                            '" target="_blank" rel="noopener noreferrer">Laes mere</a>' +
+                        '<button class="save-btn' + (saved ? " saved" : "") + '" aria-label="Gem artikel">' +
+                            '<svg width="18" height="18" viewBox="0 0 24 24" fill="' + (saved ? "currentColor" : "none") +
+                            '" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>' +
+                            '<span>' + (saved ? "Gemt" : "Gem") + '</span>' +
+                        "</button>" +
+                    "</div>" +
                 "</div>";
+
+            card.querySelector(".save-btn").addEventListener("click", function () {
+                toggleSaved(article);
+            });
 
             articleGrid.appendChild(card);
         });
@@ -331,8 +393,9 @@
             ];
         }
 
-        // Load user interests
+        // Load user interests and saved articles
         userInterests = loadInterests();
+        savedArticles = loadSavedArticles();
 
         // Load articles
         await loadFeed();
