@@ -215,6 +215,116 @@ def parse_rss(xml_text, source_name, default_category):
     return articles
 
 
+def get_demo_articles():
+    """Return demo articles for when RSS feeds are unavailable."""
+    now = datetime.now()
+    base_ts = now.timestamp()
+    demos = [
+        {
+            "title": "Ny AI-model kan oversaette dansk med rekordpraecision",
+            "description": "Forskere fra DTU har udviklet en ny sprogmodel, der saetter nye standarder for maskinoversaettelse af dansk tekst til over 50 sprog.",
+            "source": "Ingenioeren",
+            "category": "teknologi",
+            "link": "https://ing.dk/artikel/demo-ai-model",
+        },
+        {
+            "title": "Folketinget vedtager ny klimaaftale",
+            "description": "Et bredt flertal i Folketinget er blevet enige om en ny klimaaftale, der skal reducere Danmarks CO2-udledning med 70 procent inden 2030.",
+            "source": "DR Nyheder",
+            "category": "politik",
+            "link": "https://www.dr.dk/nyheder/demo-klimaaftale",
+        },
+        {
+            "title": "FC Koebenhavn vinder Superligaen efter dramatisk slutspil",
+            "description": "Med en 3-2 sejr over Broendby IF sikrede FC Koebenhavn sig det danske mesterskab i en nervepirrende afgoerende kamp.",
+            "source": "TV2 Nyheder",
+            "category": "sport",
+            "link": "https://nyheder.tv2.dk/demo-superliga",
+        },
+        {
+            "title": "Nationalbanken hoever renten for foerste gang i to aar",
+            "description": "Danmarks Nationalbank har besluttet at hoeve styringsrenten med 0,25 procentpoint som reaktion paa stigende inflation i eurozone.",
+            "source": "Boersen",
+            "category": "økonomi",
+            "link": "https://borsen.dk/demo-rente",
+        },
+        {
+            "title": "Dansk film vinder pris ved Cannes Film Festival",
+            "description": "Instruktoeeren bag den danske film 'Graenselandet' modtog Guldpalmen ved dette aars Cannes Film Festival.",
+            "source": "Politiken",
+            "category": "underholdning",
+            "link": "https://politiken.dk/demo-cannes",
+        },
+        {
+            "title": "Ny forskning: Havvand kan rense sig selv for mikroplast",
+            "description": "Forskere ved Koebenhavns Universitet har opdaget en naturlig proces, hvor bestemte bakterier i havvand kan nedbryde mikroplast.",
+            "source": "DR Nyheder",
+            "category": "videnskab",
+            "link": "https://www.dr.dk/nyheder/demo-mikroplast",
+        },
+        {
+            "title": "Regeringen praesenterer ny digitaliseringsstrategi",
+            "description": "Den nye strategi fokuserer paa at goere Danmark til foregangsland inden for digitalisering af den offentlige sektor.",
+            "source": "DR Nyheder",
+            "category": "teknologi",
+            "link": "https://www.dr.dk/nyheder/demo-digitalisering",
+        },
+        {
+            "title": "Haandboldlandsholdet klar til VM-semifinale",
+            "description": "De danske haandboldhelte besejrede Frankrig med 28-24 og er nu klar til VM-semifinalen mod Sverige.",
+            "source": "TV2 Nyheder",
+            "category": "sport",
+            "link": "https://nyheder.tv2.dk/demo-haandbold",
+        },
+        {
+            "title": "Danske startups tiltraekker rekordinvesteringer",
+            "description": "Danske tech-startups har i foerste kvartal tiltrukket over 5 milliarder kroner i venturekapital, hvilket er ny rekord.",
+            "source": "Boersen",
+            "category": "økonomi",
+            "link": "https://borsen.dk/demo-startups",
+        },
+        {
+            "title": "Ny dansk TV-serie slaar seerrekord paa streaming",
+            "description": "Dramaserien 'Broerne' har sat ny rekord som den mest sete danske serie nogensinde paa streaming-tjenesterne.",
+            "source": "Politiken",
+            "category": "underholdning",
+            "link": "https://politiken.dk/demo-streaming",
+        },
+        {
+            "title": "Klimaforskere advarer: Groenlands indlandsis smelter hurtigere end ventet",
+            "description": "Nye satellitdata viser, at Groenlands indlandsis mister is tre gange hurtigere end forudset i tidligere modeller.",
+            "source": "Ingenioeren",
+            "category": "videnskab",
+            "link": "https://ing.dk/artikel/demo-groenland",
+        },
+        {
+            "title": "Opposition kraever ministerens afgang efter laekagesag",
+            "description": "Flere oppositionspartier kraever ministerens afgang efter afsloering af laekede fortrolige dokumenter til pressen.",
+            "source": "Politiken",
+            "category": "politik",
+            "link": "https://politiken.dk/demo-minister",
+        },
+    ]
+
+    articles = []
+    for i, demo in enumerate(demos):
+        ts = base_ts - (i * 1800)  # 30 min apart
+        dt = datetime.fromtimestamp(ts)
+        article_id = generate_id(demo["title"], demo["link"])
+        articles.append({
+            "id": article_id,
+            "title": demo["title"],
+            "link": demo["link"],
+            "description": demo["description"],
+            "source": demo["source"],
+            "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+            "timestamp": ts,
+            "category": demo["category"],
+            "imageUrl": "",
+        })
+    return articles
+
+
 def fetch_all_feeds():
     """Fetch all RSS feeds and update the cache."""
     global articles_cache, last_fetch_time
@@ -237,6 +347,11 @@ def fetch_all_feeds():
 
     # Sort by timestamp descending
     all_articles.sort(key=lambda a: a["timestamp"], reverse=True)
+
+    # If no articles were fetched, load demo data so the app is usable
+    if not all_articles:
+        all_articles = get_demo_articles()
+        print("No live feeds available - loaded demo articles")
 
     with cache_lock:
         articles_cache = all_articles

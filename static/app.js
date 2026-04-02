@@ -257,6 +257,11 @@
         } catch (err) {
             console.error("Failed to load articles:", err);
             allArticles = [];
+            articleGrid.innerHTML =
+                '<div class="error-state">' +
+                '<p>Kunne ikke hente nyheder. Tjek at serveren koerer, og proev igen.</p>' +
+                '<button class="btn btn-secondary" onclick="location.reload()">Proev igen</button>' +
+                '</div>';
         }
 
         loading.classList.add("hidden");
