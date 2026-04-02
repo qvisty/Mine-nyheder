@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mine Nyheder - Din personlige nyhedsside</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">Mine Nyheder</h1>
+            <p class="tagline">Nyheder tilpasset dine interesser</p>
+            <button class="settings-btn" id="settingsBtn" aria-label="Indstillinger">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Onboarding modal -->
+    <div class="modal-overlay" id="onboardingModal">
+        <div class="modal">
+            <h2>Velkommen til Mine Nyheder!</h2>
+            <p>Vaelg de emner, du er interesseret i, for at personalisere dit nyhedsfeed.</p>
+            <div class="interest-grid" id="onboardingInterests"></div>
+            <p class="interest-hint">Vaelg mindst 1 emne for at fortsaette</p>
+            <button class="btn btn-primary" id="onboardingDone" disabled>Start mit feed</button>
+        </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div class="modal-overlay hidden" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Indstillinger</h2>
+                <button class="close-btn" id="closeSettings">&times;</button>
+            </div>
+            <h3>Mine interesser</h3>
+            <div class="interest-grid" id="settingsInterests"></div>
+            <button class="btn btn-primary" id="saveSettings">Gem indstillinger</button>
+        </div>
+    </div>
+
+    <!-- Category filters -->
+    <nav class="category-bar">
+        <div class="category-filters" id="categoryFilters">
+            <button class="category-chip active" data-category="all">Alle</button>
+        </div>
+    </nav>
+
+    <!-- Main feed -->
+    <main class="feed-container">
+        <div class="feed-header">
+            <div class="feed-info">
+                <span id="articleCount"></span>
+                <span class="last-updated" id="lastUpdated"></span>
+            </div>
+            <button class="btn btn-secondary btn-small" id="refreshBtn">Opdater</button>
+        </div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Henter nyheder...</p>
+        </div>
+        <div class="article-grid" id="articleGrid"></div>
+        <div class="no-results hidden" id="noResults">
+            <p>Ingen artikler matcher dine filtre.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Mine Nyheder &copy; 2026 - Nyheder samlet fra danske medier</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
