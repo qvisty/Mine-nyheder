@@ -8,10 +8,10 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from flask import Flask, jsonify, send_from_directory
 import hashlib
-import requests
+import os
 import re
+import requests
 import threading
-import time
 
 import os
 
@@ -365,13 +365,6 @@ def fetch_all_feeds():
     print(f"Fetched {len(all_articles)} articles from {len(RSS_SOURCES)} sources")
 
 
-def background_fetcher():
-    """Background thread that refreshes feeds every 15 minutes."""
-    while True:
-        fetch_all_feeds()
-        time.sleep(900)  # 15 minutes
-
-
 # Routes
 @app.route("/")
 def index():
@@ -385,13 +378,7 @@ def serve_static(filename):
 
 @app.route("/api/articles")
 def get_articles():
-    # Lazy-load feeds on first request (needed for PythonAnywhere where
-    # background threads are not available in WSGI mode)
     with cache_lock:
-        if not articles_cache:
-            cache_lock.release()
-            fetch_all_feeds()
-            cache_lock.acquire()
         return jsonify({
             "articles": articles_cache,
             "lastUpdated": last_fetch_time.isoformat() if last_fetch_time else None,
@@ -413,7 +400,7 @@ def get_categories():
     })
 
 
-@app.route("/api/refresh", methods=["GET", "POST"])
+@app.route("/api/refresh", methods=["POST"])
 def refresh_feeds():
     fetch_all_feeds()
     with cache_lock:
@@ -423,32 +410,8 @@ def refresh_feeds():
         })
 
 
-@app.route("/api/health")
-def health():
-    with cache_lock:
-        return jsonify({
-            "status": "ok",
-            "articles": len(articles_cache),
-            "lastUpdated": last_fetch_time.isoformat() if last_fetch_time else None,
-        })
-
-
-# Start background fetcher when imported by gunicorn or run directly.
-# Uses a flag to avoid starting multiple fetcher threads.
-_fetcher_started = False
-
-
-def start_background_fetcher():
-    global _fetcher_started
-    if _fetcher_started:
-        return
-    _fetcher_started = True
-    fetch_all_feeds()
-    fetcher_thread = threading.Thread(target=background_fetcher, daemon=True)
-    fetcher_thread.start()
-
-
-start_background_fetcher()
+# Fetch feeds once at startup so articles are ready when the user opens the page
+fetch_all_feeds()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
