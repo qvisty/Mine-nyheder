@@ -53,6 +53,23 @@ Mine-nyheder/
 | `/api/categories` | GET | Henter tilgaengelige kategorier |
 | `/api/refresh` | POST | Tvinger opdatering af nyhedsfeeds |
 
+## Deploy paa Render (anbefalet)
+
+Den nemmeste maade at faa appen live - gratis, fuld RSS-adgang, auto-deploy.
+
+1. Push projektet til GitHub
+2. Gaa til [render.com](https://render.com) og opret en gratis konto
+3. Klik **New** -> **Web Service**
+4. Forbind dit GitHub-repo (`qvisty/Mine-nyheder`)
+5. Render finder automatisk `render.yaml` og konfigurerer alt
+6. Klik **Deploy**
+
+Din side er live paa `https://mine-nyheder.onrender.com` (eller lignende).
+
+Feeds opdateres automatisk i baggrunden hvert 15. minut.
+
+> **Bemærk**: Render's gratis tier sover efter 15 min uden trafik. Foerste besog efter sleep tager ~30 sek.
+
 ## Deploy paa PythonAnywhere
 
 ### 1. Opret konto

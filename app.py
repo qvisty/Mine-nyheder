@@ -423,10 +423,22 @@ def refresh_feeds():
         })
 
 
-if __name__ == "__main__":
-    # Initial fetch
+# Start background fetcher when imported by gunicorn or run directly.
+# Uses a flag to avoid starting multiple fetcher threads.
+_fetcher_started = False
+
+
+def start_background_fetcher():
+    global _fetcher_started
+    if _fetcher_started:
+        return
+    _fetcher_started = True
     fetch_all_feeds()
-    # Start background fetcher
     fetcher_thread = threading.Thread(target=background_fetcher, daemon=True)
     fetcher_thread.start()
+
+
+start_background_fetcher()
+
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
