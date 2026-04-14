@@ -11,6 +11,8 @@
     let categories = [];
     let userInterests = [];
     let activeFilter = "all";
+    let searchQuery = "";
+    let sortMode = "newest";
 
     // DOM elements
     const onboardingModal = document.getElementById("onboardingModal");
@@ -28,6 +30,8 @@
     const articleCount = document.getElementById("articleCount");
     const lastUpdated = document.getElementById("lastUpdated");
     const refreshBtn = document.getElementById("refreshBtn");
+    const searchInput = document.getElementById("searchInput");
+    const sortSelect = document.getElementById("sortSelect");
 
     // --- LocalStorage (interests + onboarding only) ---
     function loadInterests() {
@@ -169,16 +173,14 @@
 
     // --- Rendering: Articles ---
     function getFilteredArticles() {
-        if (activeFilter === "saved") {
-            return allArticles.filter(function (a) { return a.saved; }).sort(function (a, b) {
-                return (b.timestamp || 0) - (a.timestamp || 0);
-            });
-        }
-
         let articles = allArticles.slice();
 
+        if (activeFilter === "saved") {
+            articles = articles.filter(function (a) { return a.saved; });
+        }
+
         // Personalize: prioritize articles matching user interests
-        if (userInterests.length > 0) {
+        if (userInterests.length > 0 && activeFilter !== "saved") {
             var matched = [];
             var unmatched = [];
             articles.forEach(function (a) {
@@ -195,6 +197,22 @@
         if (activeFilter !== "all") {
             articles = articles.filter(function (a) { return a.category === activeFilter; });
         }
+
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            articles = articles.filter(function (a) {
+                return (a.title || "").toLowerCase().includes(q) ||
+                    (a.description || "").toLowerCase().includes(q) ||
+                    (a.source || "").toLowerCase().includes(q);
+            });
+        }
+
+        articles.sort(function (a, b) {
+            if (sortMode === "oldest") {
+                return (a.timestamp || 0) - (b.timestamp || 0);
+            }
+            return (b.timestamp || 0) - (a.timestamp || 0);
+        });
 
         return articles;
     }
@@ -243,6 +261,8 @@
 
         if (activeFilter === "saved") {
             articleCount.textContent = filtered.length + " gemte artikler";
+        } else if (searchQuery) {
+            articleCount.textContent = filtered.length + " søgeresultater";
         } else if (activeFilter !== "all") {
             articleCount.textContent = filtered.length + " artikler i " + getCategoryName(activeFilter);
         } else if (userInterests.length > 0) {
@@ -399,6 +419,14 @@
         settingsBtn.addEventListener("click", showSettings);
         closeSettings.addEventListener("click", hideSettings);
         refreshBtn.addEventListener("click", refreshFeed);
+        searchInput.addEventListener("input", function (e) {
+            searchQuery = e.target.value.trim();
+            renderArticles();
+        });
+        sortSelect.addEventListener("change", function (e) {
+            sortMode = e.target.value;
+            renderArticles();
+        });
 
         // Close modals on overlay click
         settingsModal.addEventListener("click", function (e) {
