@@ -8,6 +8,8 @@ En webbaseret platform der samler nyheder fra danske medier og praesenterer dem 
 - **Kategorisering** af artikler (Teknologi, Politik, Sport, Oekonomi, Underholdning, Videnskab)
 - **Personalisering** - vaelg dine interesser og faa relevante nyheder foerst
 - **Filtrering** efter kategori
+- **Soegning** i titel, beskrivelse og kilde
+- **Sortering** af artikler (nyeste/ældste)
 - **Responsivt design** - virker paa baade desktop og mobil
 - Nyheder hentes ved opstart og kan opdateres med "Opdater"-knappen
 
